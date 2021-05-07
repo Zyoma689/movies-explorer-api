@@ -2,8 +2,6 @@ const User = require('../models/user');
 
 const { BadRequestError } = require('../errors/400_bad-request-error');
 const { NotFoundError } = require('../errors/404_not-found-error');
-const { ConflictError } = require('../errors/409_conflict-error');
-const { UnauthorizedError } = require('../errors/401_unauthorized-error');
 
 const getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)

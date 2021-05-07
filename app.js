@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 
 const router = require('./routes/index');
+const { celebrateErrorHandler } = require('./middlewares/celebrate-errors-handler');
 
 const { PORT = 3000 } = process.env;
 
@@ -25,6 +26,8 @@ app.use((req, res, next) => {
 });
 
 app.use('/', router);
+
+app.use(celebrateErrorHandler);
 
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
