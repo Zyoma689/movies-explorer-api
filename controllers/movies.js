@@ -1,5 +1,10 @@
 const Movie = require('../models/movie');
 
+const { BadRequestError } = require('../errors/400_bad-request-error');
+const { ForbiddenError } = require('../errors/403_forbidden-error');
+const { NotFoundError } = require('../errors/404_not-found-error');
+const { ConflictError } = require('../errors/409_conflict-error');
+
 const getMovies = (req, res, next) => {
   Movie.find({ owner: req.user._id })
     .populate(['owner'])
@@ -26,8 +31,8 @@ const addMovie = (req, res, next) => {
   Movie.find({ movieId, owner: req.user._id })
     .then((addedMovie) => {
       if (addedMovie.length !== 0) {
-        return next(new Error('Фильм уже сохранен'));
-}
+        return next(new ConflictError('Фильм уже сохранен'));
+      }
       return Movie.create({
         country,
         director,
@@ -50,7 +55,13 @@ const addMovie = (req, res, next) => {
             })
             .catch(next);
         })
-        .catch(next);
+        .catch((err) => {
+          if (err.name === 'ValidationError') {
+            next(new BadRequestError(`${Object.values(err.errors).map((error) => error.message).join(', ')}`));
+          } else {
+            next(err);
+          }
+        });
     })
     .catch(next);
 };
@@ -60,20 +71,17 @@ const removeMovie = (req, res, next) => {
   Movie.findById(movieId)
     .then((movie) => {
       if (!movie) {
-        return next(new Error('Фильм не найден'));
+        return next(new NotFoundError('Фильм не найден'));
       }
       if (movie.owner._id.toString() !== req.user._id) {
-        return next(new Error('Вы не можете удалять чужие фильмы'));
+        return next(new ForbiddenError('Вы не можете удалять чужие фильмы'));
       }
-      return Movie.findByIdAndRemove(movieId)
-        .then(() => {
-          res.send({ message: 'Фильм удален' });
-        })
-        .catch(next);
+      movie.remove();
+      return res.send({ message: 'Фильм удален' });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new Error('id должен быть валидным'));
+        next(new BadRequestError('id должен быть валидным'));
       } else {
         next(err);
       }
