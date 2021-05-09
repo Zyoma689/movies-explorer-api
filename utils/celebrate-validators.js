@@ -39,6 +39,33 @@ const createUserValidator = celebrate({
   }),
 });
 
+const loginValidator = celebrate({
+  body: Joi.object().keys({
+    email: Joi
+      .string()
+      .required()
+      .email()
+      .label('Email')
+      .messages({
+        'string.base': '{#label} должен быть строкой',
+        'any.required': 'Поле {#label} обязательно для заполнения',
+        'string.email': '{#label} должен быть валидным',
+        'string.empty': 'Поле {#label} не может быть пустым',
+      }),
+    password: Joi
+      .string()
+      .required()
+      .min(8)
+      .label('Пароль')
+      .messages({
+        'string.base': '{#label} должен быть строкой',
+        'any.required': 'Поле "{#label}" обязательно для заполнения',
+        'string.min': '{#label} должен содержать не менее {#limit} символов',
+        'string.empty': 'Поле "{#label}" не может быть пустым',
+      }),
+  }),
+});
+
 const updateUserValidator = celebrate({
   body: Joi.object().keys({
     email: Joi
@@ -196,6 +223,7 @@ const removeMovieValidator = celebrate({
 
 module.exports = {
   createUserValidator,
+  loginValidator,
   updateUserValidator,
   addMovieValidator,
   removeMovieValidator,

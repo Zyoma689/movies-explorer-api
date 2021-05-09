@@ -76,8 +76,8 @@ const removeMovie = (req, res, next) => {
       if (movie.owner._id.toString() !== req.user._id) {
         return next(new ForbiddenError('Вы не можете удалять чужие фильмы'));
       }
-      movie.remove();
-      return res.send({ message: 'Фильм удален' });
+      return movie.remove()
+        .then(() => res.send({ message: 'Фильм удален' }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
