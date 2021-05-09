@@ -1,7 +1,60 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const { BadRequestError } = require('../errors/400_bad-request-error');
 const { NotFoundError } = require('../errors/404_not-found-error');
+const { ConflictError } = require('../errors/409_conflict-error');
+
+const { NODE_ENV, JWT_SECRET } = process.env;
+
+const createUser = (req, res, next) => {
+  const { email, password, name } = req.body;
+
+  if (!email || !password || !name) {
+    return next(BadRequestError('Некорректные данные'));
+  }
+  return bcrypt.hash(password, 10)
+    .then((hash) => {
+      User.create({ email, password: hash, name })
+        .then(({ _id }) => {
+          User.findById(_id).select()
+            .then((user) => res.status(201).send(user))
+            .catch(next);
+        })
+        .catch((err) => {
+          if (err.name === 'ValidationError') {
+            next(new BadRequestError(`${Object.values(err.errors).map((error) => error.message).join(', ')}`));
+          } else if (err.name === 'MongoError' && err.code === 11000) {
+            next(new ConflictError('Пользователь с таким email уже существует'));
+          } else {
+            next(err);
+          }
+        });
+    })
+    .catch(next);
+};
+
+const login = (req, res, next) => {
+  const { email, password } = req.body;
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', { expiresIn: '7d' });
+      res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true, sameSite: true }).send({ message: 'OK' });
+    })
+    .catch(next);
+};
+
+const logout = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user) {
+        return next(new NotFoundError('Пользователь не найден'));
+      }
+      return res.clearCookie('jwt').send({ message: 'До скорой встречи!' });
+    })
+    .catch(next);
+};
 
 const getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
@@ -36,6 +89,9 @@ const updateCurrentUser = (req, res, next) => {
 };
 
 module.exports = {
+  createUser,
+  login,
+  logout,
   getCurrentUser,
   updateCurrentUser,
 };
