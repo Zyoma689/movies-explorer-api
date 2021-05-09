@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const auth = require('../middlewares/auth');
 const userRouter = require('./users');
 const movieRouter = require('./movies');
 
@@ -8,6 +9,7 @@ const { NotFoundError } = require('../errors/404_not-found-error');
 
 router.post('/signup', createUserValidator, createUser);
 router.post('/signin', loginValidator, login);
+router.use(auth);
 router.post('/signout', logout);
 router.use('/users', userRouter);
 router.use('/movies', movieRouter);

@@ -122,7 +122,6 @@ const addMovieValidator = celebrate({
         'number.base': '{#label} должна быть числом',
         'number.integer': '{#label} должна быть целым числом',
         'any.required': 'Поле {#label} обязательно для заполнения',
-        'string.empty': 'Поле {#label} не может быть пустым',
       }),
     year: Joi
       .string()
@@ -177,13 +176,12 @@ const addMovieValidator = celebrate({
         'string.empty': 'Поле {#label} не может быть пустым',
       }),
     movieId: Joi
-      .string()
+      .number()
       .required()
       .label('id фильма')
       .messages({
-        'string.base': '{#label} должен быть строкой',
+        'number.base': '{#label} должен быть числом',
         'any.required': 'Поле {#label} обязательно для заполнения',
-        'string.empty': 'Поле {#label} не может быть пустым',
       }),
     nameRU: Joi
       .string()
