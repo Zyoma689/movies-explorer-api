@@ -2,14 +2,20 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
-const limiter = require('./utils/limiter');
+const cors = require('cors');
+const helmet = require('helmet');
 
+const limiter = require('./utils/limiter');
 const { PORT, MONGO_URL } = require('./config');
 const router = require('./routes/index');
 const { celebrateErrorHandler } = require('./middlewares/celebrate-errors-handler');
+const { errorsHandler } = require('./middlewares/errors-handler');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const app = express();
+
+app.use(cors());
+app.use(helmet());
 
 mongoose.connect(MONGO_URL, {
   useNewUrlParser: true,
@@ -27,11 +33,6 @@ app.use('/', router);
 
 app.use(errorLogger);
 app.use(celebrateErrorHandler);
-
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message } = err;
-  res.status(statusCode).send({ message: statusCode === 500 ? 'На сервере произошла ошибка' : message });
-  next();
-});
+app.use(errorsHandler);
 
 app.listen(PORT, () => {});
