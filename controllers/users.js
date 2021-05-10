@@ -5,15 +5,14 @@ const User = require('../models/user');
 const { BadRequestError } = require('../errors/400_bad-request-error');
 const { NotFoundError } = require('../errors/404_not-found-error');
 const { ConflictError } = require('../errors/409_conflict-error');
+const {
+  OK, EMAIL_CONFLICT, USER_NOT_FOUND, GOODBYE,
+} = require('../utils/constants');
 
 const { JWT_SECRET } = require('../config');
 
 const createUser = (req, res, next) => {
   const { email, password, name } = req.body;
-
-  if (!email || !password || !name) {
-    return next(BadRequestError('Некорректные данные'));
-  }
   return bcrypt.hash(password, 10)
     .then((hash) => {
       User.create({ email, password: hash, name })
@@ -26,7 +25,7 @@ const createUser = (req, res, next) => {
           if (err.name === 'ValidationError') {
             next(new BadRequestError(`${Object.values(err.errors).map((error) => error.message).join(', ')}`));
           } else if (err.name === 'MongoError' && err.code === 11000) {
-            next(new ConflictError('Пользователь с таким email уже существует'));
+            next(new ConflictError(EMAIL_CONFLICT));
           } else {
             next(err);
           }
@@ -40,7 +39,7 @@ const login = (req, res, next) => {
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
-      res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true, sameSite: true }).send({ message: 'OK' });
+      res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true, sameSite: true }).send({ message: OK });
     })
     .catch(next);
 };
@@ -49,9 +48,9 @@ const logout = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (!user) {
-        return next(new NotFoundError('Пользователь не найден'));
+        return next(new NotFoundError(USER_NOT_FOUND));
       }
-      return res.clearCookie('jwt').send({ message: 'До скорой встречи!' });
+      return res.clearCookie('jwt').send({ message: GOODBYE });
     })
     .catch(next);
 };
@@ -60,7 +59,7 @@ const getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (!user) {
-        return next(new NotFoundError('Пользователь не найден'));
+        return next(new NotFoundError(USER_NOT_FOUND));
       }
       return res.send(user);
     })
@@ -69,23 +68,30 @@ const getCurrentUser = (req, res, next) => {
 
 const updateCurrentUser = (req, res, next) => {
   const { email, name } = req.body;
-  User.findByIdAndUpdate(req.user._id, { email, name }, {
-    new: true,
-    runValidators: true,
-  })
-    .then((user) => {
-      if (!user) {
-        return next(new NotFoundError('Пользователь не найден'));
+  User.findOne({ email })
+    .then((existingUser) => {
+      if (existingUser) {
+        return next(new ConflictError(EMAIL_CONFLICT));
       }
-      return res.send(user);
+      return User.findByIdAndUpdate(req.user._id, { email, name }, {
+        new: true,
+        runValidators: true,
+      })
+        .then((user) => {
+          if (!user) {
+            return next(new NotFoundError(USER_NOT_FOUND));
+          }
+          return res.send(user);
+        })
+        .catch((err) => {
+          if (err.name === 'ValidationError') {
+            next(new BadRequestError(`${Object.values(err.errors).map((error) => error.message).join(', ')}`));
+          } else {
+            next(err);
+          }
+        });
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new BadRequestError(`${Object.values(err.errors).map((error) => error.message).join(', ')}`));
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
 };
 
 module.exports = {

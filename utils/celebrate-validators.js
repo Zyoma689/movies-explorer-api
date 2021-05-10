@@ -20,9 +20,9 @@ const createUserValidator = celebrate({
       .label('Пароль')
       .messages({
         'string.base': '{#label} должен быть строкой',
-        'any.required': 'Поле "{#label}" обязательно для заполнения',
+        'any.required': 'Поле {#label} обязательно для заполнения',
         'string.min': '{#label} должен содержать не менее {#limit} символов',
-        'string.empty': 'Поле "{#label}" не может быть пустым',
+        'string.empty': 'Поле {#label} не может быть пустым',
       }),
     name: Joi
       .string()
@@ -31,10 +31,10 @@ const createUserValidator = celebrate({
       .label('Имя')
       .messages({
         'string.base': '{#label} должно быть строкой',
-        'any.required': 'Поле "{#label}" обязательно для заполнения',
+        'any.required': 'Поле {#label} обязательно для заполнения',
         'string.min': '{#label} должно содержать не менее {#limit} символов',
         'string.max': '{#label} должно содержать не более {#limit} символов',
-        'string.empty': 'Поле "{#label}" не может быть пустым',
+        'string.empty': 'Поле {#label} не может быть пустым',
       }),
   }),
 });
@@ -59,7 +59,7 @@ const loginValidator = celebrate({
       .label('Пароль')
       .messages({
         'string.base': '{#label} должен быть строкой',
-        'any.required': 'Поле "{#label}" обязательно для заполнения',
+        'any.required': 'Поле {#label} обязательно для заполнения',
         'string.min': '{#label} должен содержать не менее {#limit} символов',
         'string.empty': 'Поле "{#label}" не может быть пустым',
       }),

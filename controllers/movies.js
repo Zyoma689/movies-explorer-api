@@ -4,6 +4,9 @@ const { BadRequestError } = require('../errors/400_bad-request-error');
 const { ForbiddenError } = require('../errors/403_forbidden-error');
 const { NotFoundError } = require('../errors/404_not-found-error');
 const { ConflictError } = require('../errors/409_conflict-error');
+const {
+  MOVIE_CONFLICT, MOVIE_NOT_FOUND, MOVIE_FORBIDDEN, MOVIE_SUCCESS_REMOVE, ID_BAD_REQUEST,
+} = require('../utils/constants');
 
 const getMovies = (req, res, next) => {
   Movie.find({ owner: req.user._id })
@@ -31,7 +34,7 @@ const addMovie = (req, res, next) => {
   Movie.find({ movieId, owner: req.user._id })
     .then((addedMovie) => {
       if (addedMovie.length !== 0) {
-        return next(new ConflictError('Фильм уже сохранен'));
+        return next(new ConflictError(MOVIE_CONFLICT));
       }
       return Movie.create({
         country,
@@ -71,17 +74,17 @@ const removeMovie = (req, res, next) => {
   Movie.findById(movieId)
     .then((movie) => {
       if (!movie) {
-        return next(new NotFoundError('Фильм не найден'));
+        return next(new NotFoundError(MOVIE_NOT_FOUND));
       }
       if (movie.owner._id.toString() !== req.user._id) {
-        return next(new ForbiddenError('Вы не можете удалять чужие фильмы'));
+        return next(new ForbiddenError(MOVIE_FORBIDDEN));
       }
       return movie.remove()
-        .then(() => res.send({ message: 'Фильм удален' }));
+        .then(() => res.send({ message: MOVIE_SUCCESS_REMOVE }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('id должен быть валидным'));
+        next(new BadRequestError(ID_BAD_REQUEST));
       } else {
         next(err);
       }
