@@ -68,10 +68,12 @@ const getCurrentUser = (req, res, next) => {
 
 const updateCurrentUser = (req, res, next) => {
   const { email, name } = req.body;
-  User.findOne({ email })
+  User.find({ email })
     .then((existingUser) => {
-      if (existingUser) {
-        return next(new ConflictError(EMAIL_CONFLICT));
+      if (existingUser.length !== 0) {
+        if (existingUser[0]._id.toString() !== req.user._id) {
+          return next(new ConflictError(EMAIL_CONFLICT));
+        }
       }
       return User.findByIdAndUpdate(req.user._id, { email, name }, {
         new: true,
