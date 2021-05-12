@@ -8,6 +8,7 @@ const { createUserValidator, loginValidator } = require('../utils/celebrate-vali
 const { NotFoundError } = require('../errors/404_not-found-error');
 const { ROUTE_NOT_FOUND } = require('../utils/constants');
 
+router.all('/', auth);
 router.post('/signup', createUserValidator, createUser);
 router.post('/signin', loginValidator, login);
 router.use(auth);
