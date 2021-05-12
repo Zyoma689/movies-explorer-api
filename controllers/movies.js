@@ -52,7 +52,6 @@ const addMovie = (req, res, next) => {
       })
         .then(({ _id }) => {
           Movie.findById(_id)
-            .populate(['owner'])
             .then((movie) => {
               res.send(movie);
             })
@@ -76,7 +75,7 @@ const removeMovie = (req, res, next) => {
       if (!movie) {
         return next(new NotFoundError(MOVIE_NOT_FOUND));
       }
-      if (movie.owner._id.toString() !== req.user._id) {
+      if (movie.owner.toString() !== req.user._id) {
         return next(new ForbiddenError(MOVIE_FORBIDDEN));
       }
       return movie.remove()
