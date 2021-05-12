@@ -1,14 +1,14 @@
 const { isCelebrateError } = require('celebrate');
 const { BadRequestError } = require('../errors/400_bad-request-error');
-const { ID_BAD_REQUEST } = require('../utils/constants');
 
 const celebrateErrorHandler = (err, req, res, next) => {
   if (isCelebrateError(err)) {
-    const errorPath = err.details.get('body');
-    if (!errorPath) {
-      throw new BadRequestError(ID_BAD_REQUEST);
+    const errorBody = err.details.get('body');
+    const errParams = err.details.get('params');
+    if (!errorBody && errParams) {
+      throw new BadRequestError(errParams.message);
     }
-    throw new BadRequestError(errorPath.message);
+    throw new BadRequestError(errorBody.message);
   }
   return next(err);
 };
