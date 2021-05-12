@@ -1,4 +1,12 @@
 const { celebrate, Joi } = require('celebrate');
+const validator = require('validator');
+
+const validateURL = (value, helpers) => {
+  if (validator.isURL(value)) {
+    return value;
+  }
+  return helpers.message(`URL-адресс поля ${helpers.state.path} должен быть валидным`);
+};
 
 const createUserValidator = celebrate({
   body: Joi.object().keys({
@@ -144,35 +152,32 @@ const addMovieValidator = celebrate({
       }),
     image: Joi
       .string()
-      .regex(/https?:\/\/(www\.)?([-\w.:])+([-\w._~:/?#[\]@!$&'()*+,;=])*/i)
       .required()
       .label('URL-адресс постера')
+      .custom(validateURL)
       .messages({
         'string.base': '{#label} должен быть строкой',
         'any.required': 'Поле {#label} обязательно для заполнения',
-        'string.pattern.base': '{#label} должен быть валидным',
         'string.empty': 'Поле {#label} не может быть пустым',
       }),
     trailer: Joi
       .string()
-      .regex(/https?:\/\/(www\.)?([-\w.:])+([-\w._~:/?#[\]@!$&'()*+,;=])*/i)
+      .custom(validateURL)
       .required()
       .label('URL-адресс трейлера')
       .messages({
         'string.base': '{#label} должен быть строкой',
         'any.required': 'Поле {#label} обязательно для заполнения',
-        'string.pattern.base': '{#label} должен быть валидным',
         'string.empty': 'Поле {#label} не может быть пустым',
       }),
     thumbnail: Joi
       .string()
-      .regex(/https?:\/\/(www\.)?([-\w.:])+([-\w._~:/?#[\]@!$&'()*+,;=])*/i)
+      .custom(validateURL)
       .required()
       .label('URL-адресс превью постера')
       .messages({
         'string.base': '{#label} должен быть строкой',
         'any.required': 'Поле {#label} обязательно для заполнения',
-        'string.pattern.base': '{#label} должен быть валидным',
         'string.empty': 'Поле {#label} не может быть пустым',
       }),
     movieId: Joi
