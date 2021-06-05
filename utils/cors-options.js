@@ -1,7 +1,7 @@
 const corsOptions = {
   origin: [
     'http://movies.ivart.nomoredomains.club',
-    'https://api.movies.ivart.nomoredomains.club',
+    'https://movies.ivart.nomoredomains.club',
     'http://api.movies.ivart.nomoredomains.club',
     'https://api.movies.ivart.nomoredomains.club',
     'http://localhost:3000',
